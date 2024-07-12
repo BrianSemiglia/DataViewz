@@ -226,7 +226,7 @@ struct Viewz: View {
         if isRoot {
             NavigationView {
                 ScrollView {
-                    foo
+                    foo.navigationTitle("DataViewz")
                 }
             }
         } else {
