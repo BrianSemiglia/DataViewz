@@ -5,8 +5,8 @@ import MapKit
 extension Binding {
     func conditionally(condition: @escaping (Value) -> Bool) -> Binding {
         Binding(
-            get: { wrappedValue }, 
-            set: { value, transaction in 
+            get: { wrappedValue },
+            set: { value, transaction in
                 if condition(value) {
                     wrappedValue = value
                 }
@@ -17,102 +17,103 @@ extension Binding {
 
 struct ContentView: View {
     
-    @State var foo: String = "Foo"
+    @State var foo = "Foo"
     @State var age: Int = 0
-    @State var date: Date = Date()
-    @State var toggle: Bool = false
+    @State var date = Date()
+    @State var toggle = false
     @State var color = Color.red
-    @State private var region = MKCoordinateRegion(
+    @State var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(
-            latitude: 51.507222, 
+            latitude: 51.507222,
             longitude: -3.1275
-        ), 
+        ),
         span: MKCoordinateSpan(
             latitudeDelta: 0.5,
             longitudeDelta: 0.5
         )
     )
+    @State var button: Void = ()
 
 
     var body: some View {
-        ScrollView {
-//            Viewz {(
-//                foo: [5,1,1,1,1,1],
-//                bar: "yes",
-//                baz: "no"
-//            )}
-//            Viewz {(
-//                foo: 3,
-//                things: [1, 2, 3],
-//                (age: age,
-//                editAge: $age.conditionally { $0 > 0 && $0 <= 5 }),
-//                (edit: $foo.conditionally { $0.count <= 10 },
-//                name: (key: "yo", value: foo))
-//            )}
-//            Viewz { [1, 2, 3] }
-//            Viewz { (age: age, value: $age.conditionally { $0 > 0 && $0 <= 5 }) }
-//            Viewz { $foo.conditionally { $0.count <= 10 } }
-//            Viewz { (key: "yo", value: foo) }
-
-            Viewz {(
-                link: URL(string: "http://www.google.com"),
-                UIImage(systemName: "star.fill"),
-                color: $color,
-                toggle: $toggle,
-                date: $date,
-                map: $region,
-                foo: 3,
-                things: [1, 2, 3],
-                (age: age, editAge: $age.conditionally { $0 > 0 && $0 <= 5 }),
-                (edit: $foo.conditionally { $0.count <= 10 }, name: (key: "yo", value: foo)),
-                Just(
-                    Foo(
-                        integer: 8,
-                        structs: [
-                            Bar(
-                                string: "foo", 
-                                array: [1, 2, 3],
-                                function: { _ in 8 },
-                                dictionary: [
-                                    "hello": "world", 
-                                    "foo": nil
-                                ]
-                            ),
-                            Bar(
-                                string: "foo", 
-                                array: [1, 2, 3], 
-                                function: { _ in 8 },
-                                dictionary: [
-                                    "hello": "world", 
-                                    "foo": "barz"
-                                ]
-                            ),
-                            Bar(
-                                string: "foo", 
-                                array: [1, 2, 3], 
-                                function: { _ in 8 },
-                                dictionary: [
-                                    "hello": "world", 
-                                    "foo": "barz"
-                                ]
-                            )
-                        ],
-                        tuple: (9, 999),
-                        enum: .myCase(
-                            Bar(
-                                string: "foo", 
-                                array: [1, 2, 3],
-                                function: { _ in 8 },
-                                dictionary: [
-                                    "hello": "world", 
-                                    "foo": "barz"
-                                ]
-                            )
+        //        ScrollView {
+        //            Viewz {(
+        //                foo: [5,1,1,1,1,1],
+        //                bar: "yes",
+        //                baz: "no"
+        //            )}
+        //            Viewz {(
+        //                foo: 3,
+        //                things: [1, 2, 3],
+        //                (age: age,
+        //                editAge: $age.conditionally { $0 > 0 && $0 <= 5 }),
+        //                (edit: $foo.conditionally { $0.count <= 10 },
+        //                name: (key: "yo", value: foo))
+        //            )}
+        //            Viewz { [1, 2, 3] }
+        //            Viewz { (age: age, value: $age.conditionally { $0 > 0 && $0 <= 5 }) }
+        //            Viewz { $foo.conditionally { $0.count <= 10 } }
+        //            Viewz { (key: "yo", value: foo) }
+        
+        Viewz {(
+            link: URL(string: "http://www.google.com"),
+            UIImage(systemName: "star.fill"),
+            color: $color,
+            toggle: $toggle,
+            date: $date,
+            map: $region,
+            button: $button,
+            foo: 3,
+            things: [1, 2, 3],
+            (age: age, editAge: $age.conditionally { $0 > 0 && $0 <= 5 }),
+            (edit: $foo.conditionally { $0.count <= 10 }, name: (key: "yo", value: foo)),
+            Just(
+                Foo(
+                    integer: 8,
+                    structs: [
+                        Bar(
+                            string: "foo",
+                            array: [1, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3],
+                            function: { _ in 8 },
+                            dictionary: [
+                                "hello": "world",
+                                "foo": nil
+                            ]
+                        ),
+                        Bar(
+                            string: "foo",
+                            array: [1, 2, 3],
+                            function: { _ in 8 },
+                            dictionary: [
+                                "hello": "world",
+                                "foo": "barz"
+                            ]
+                        ),
+                        Bar(
+                            string: "foo",
+                            array: [1, 2, 3],
+                            function: { _ in 8 },
+                            dictionary: [
+                                "hello": "world",
+                                "foo": "barz"
+                            ]
+                        )
+                    ],
+                    tuple: (9, 999),
+                    enum: .myCase(
+                        Bar(
+                            string: "foo",
+                            array: [1, 2, 3],
+                            function: { _ in 8 },
+                            dictionary: [
+                                "hello": "world",
+                                "foo": "barz"
+                            ]
                         )
                     )
                 )
-            )}
-        }
+            )
+        )}
     }
 }
 
@@ -165,7 +166,7 @@ struct Viewz: View {
     }
     
     var body: some View {
-        let thing = HStack {
+        let foo = HStack {
             let parent = constructor()
             if let label = label {
                 Text(label.capitalized).font(.headline)
@@ -180,7 +181,7 @@ struct Viewz: View {
                 } else if let parent = parent as? Binding<Bool> {
                     Toggle("", isOn: parent)
                 } else if let parent = parent as? Binding<Color> {
-                    ColorPicker("", selection: parent)                    
+                    ColorPicker("", selection: parent)
                 } else if let parent = parent as? Binding<Void> {
                     Button("Button") {
                         parent.wrappedValue = ()
@@ -198,8 +199,10 @@ struct Viewz: View {
                     ForEach(Array(Mirror(reflecting: parent).children.enumerated()), id: \.offset) { _, x in
                         if Mirror(reflecting: x.value).children.count > 2 {
                             NavigationLink("\(x.label?.capitalized ?? "Some")") {
-                                Viewz(opacity: opacity - 0.15, label: nil, isRoot: false) { x.value }
-                                    .navigationTitle("\(x.label?.capitalized ?? "Some")")
+                                ScrollView {
+                                    Viewz(opacity: opacity - 0.15, label: nil, isRoot: false) { x.value }
+                                        .navigationTitle("\(x.label?.capitalized ?? "Some")")
+                                }
                             }
                         } else {
                             Viewz(opacity: opacity - 0.15, label: x.label, isRoot: false) { x.value }
@@ -219,13 +222,15 @@ struct Viewz: View {
         .padding(8)
         .background(Color.yellow.opacity(opacity))
         .cornerRadius(8)
-        
+                
         if isRoot {
             NavigationView {
-                thing
+                ScrollView {
+                    foo
+                }
             }
         } else {
-            thing
+            foo
         }
     }
     
@@ -233,10 +238,10 @@ struct Viewz: View {
         let typeDescription = String(describing: type(of: value))
         let regex = try! NSRegularExpression(pattern: #"\(.*\) -> .+"#)
         if let match = regex.firstMatch(
-            in: typeDescription, 
-            options: [], 
+            in: typeDescription,
+            options: [],
             range: NSRange(
-                location: 0, 
+                location: 0,
                 length: typeDescription.count
             )
         ) {
@@ -318,4 +323,9 @@ struct SafariView: UIViewControllerRepresentable {
         
     }
     
+}
+
+
+#Preview {
+    ContentView()
 }

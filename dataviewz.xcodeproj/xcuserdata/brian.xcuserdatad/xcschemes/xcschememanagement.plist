@@ -2,12 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>AppSettings</key>
+	<key>SchemeUserState</key>
 	<dict>
-		<key>appIconPlaceholderGlyphName</key>
-		<string>carrot</string>
-		<key>appSettingsVersion</key>
-		<integer>1</integer>
+		<key>dataviewz.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>0</integer>
+		</dict>
 	</dict>
 </dict>
 </plist>
