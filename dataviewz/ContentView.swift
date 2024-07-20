@@ -1,6 +1,9 @@
 import SwiftUI
 import Combine
 import MapKit
+import AVKit
+import PhotosUI
+import ContactsUI
 
 extension Binding {
     func conditionally(condition: @escaping (Value) -> Bool) -> Binding {
@@ -14,6 +17,228 @@ extension Binding {
         )
     }
 }
+
+struct PhotosPickerItemImage: View {
+    @Binding var item: PhotosPickerItem?
+    @State private var image: Image? = nil
+    @State private var isLoading: Bool = false
+    
+    var body: some View {
+        VStack {
+            if let image = image {
+                image
+                    .resizable()
+                    .scaledToFit()
+            } else if isLoading {
+                ProgressView()
+            } else {
+                Text("No Image Selected")
+                    .foregroundColor(.secondary)
+            }
+        }
+        .onChange(of: item) {
+            loadImage()
+        }
+        .onAppear {
+            loadImage()
+        }
+    }
+    
+    private func loadImage() {
+        guard let item = item else {
+            image = nil
+            return
+        }
+        
+        isLoading = true
+        item.loadTransferable(type: Data.self) { result in
+            DispatchQueue.main.async {
+                isLoading = false
+                switch result {
+                case .success(let data?):
+                    if let uiImage = UIImage(data: data) {
+                        image = Image(uiImage: uiImage)
+                    } else {
+                        image = nil
+                    }
+                case .success(nil), .failure:
+                    image = nil
+                }
+            }
+        }
+    }
+}
+
+extension Binding {
+    func map<T>(
+        get: @escaping (Value) -> T,
+        set: @escaping (T, inout Value) -> Void = { _, _ in }
+    ) -> Binding<T> {
+        Binding<T>(
+            get: { get(self.wrappedValue) },
+            set: { new, transaction in
+                set(new, &self.wrappedValue)
+            }
+        )
+    }
+}
+
+final class Objectz: ObservableObject {
+    
+//    private let bar = "Bar"
+//    @State var foo = "Foo"
+    @ReadOnlyPublished var thing = UIColor.green // LAZY DOES NOT WORK
+    @Published var foo: String = "hi"
+    @Published var baz2: Int = 5000 // read only needs viewz conformance
+    @Published var pickImage: PhotosPickerItem?
+    @Published var image: UIImage?
+    @Published var things = [
+        Bar(string: "hi", array: [0,1,2,3], function: { _ in 5 }, dictionary: ["foo": "bar"]),
+        Bar(string: "hello", array: [3,2], function: { _ in 5 }, dictionary: ["foo": "bar"])
+    ]
+    
+    @Published var baz: Int = 0
+    @Published var incrementBaz = Action.idle
+
+    init() {
+        $incrementBaz
+            .print()
+            .removeDuplicates()
+            .filter { $0 == .beginning }
+            .delay(for: 1, scheduler: RunLoop.main) // only works if called async 🫤
+            .combineLatest($baz.removeDuplicates())
+            .map { $0.1 + 1 }
+            .assign(to: &$baz)
+        
+        $baz
+            .removeDuplicates()
+            .combineLatest($incrementBaz.removeDuplicates())
+            .map { _ in .idle }
+            .assign(to: &$incrementBaz)
+    }
+    
+//    @State var age: Int = 0
+    @Published var date = Date()
+    @Published var toggle = false
+    @Published var color = Color.red
+    @Published var region = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(
+            latitude: 51.507222,
+            longitude: -3.1275
+        ),
+        span: MKCoordinateSpan(
+            latitudeDelta: 0.5,
+            longitudeDelta: 0.5
+        )
+    )
+//    @State var button: Void = ()
+//    @State var image: PhotosPickerItem?
+    @Published var contact: CNContact?
+//
+//    let thing = (
+//        video: AVPlayerItem(url: Bundle.main.url(forResource: "drift", withExtension: "mov")!),
+//        link: URL(string: "http://www.google.com"),
+//        singleImage: UIImage(systemName: "star.fill"),
+//        manyImage: Array(repeating: UIImage(systemName: "star.fill"), count: 100),
+////        pickableImage: $image,
+////        color: $color,
+////        toggle: $toggle,
+////        date: $date,
+//        contact: CNContact(),
+////        pickableContact: $contact,
+////        map: $region,
+////        button: $button,
+//        foo: 3,
+//        things: [1, 2, 3],
+////        age: (age, edit: $age.conditionally { $0 > 0 && $0 <= 5 }),
+////        (name: (key: "yo", value: foo), edit: $foo.conditionally { $0.count <= 10 }),
+//        Just(
+//            Foo(
+//                integer: 8,
+//                structs: [
+//                    Bar(
+//                        string: "foo",
+//                        array: [1, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3],
+//                        function: { _ in 8 },
+//                        dictionary: [
+//                            "hello": "world",
+//                            "foo": nil
+//                        ]
+//                    ),
+//                    Bar(
+//                        string: "foo",
+//                        array: [1, 2, 3],
+//                        function: { _ in 8 },
+//                        dictionary: [
+//                            "hello": "world",
+//                            "foo": "barz"
+//                        ]
+//                    ),
+//                    Bar(
+//                        string: "foo",
+//                        array: [1, 2, 3],
+//                        function: { _ in 8 },
+//                        dictionary: [
+//                            "hello": "world",
+//                            "foo": "barz"
+//                        ]
+//                    )
+//                ],
+//                tuple: (9, 999),
+//                enum: .myCase(
+//                    Bar(
+//                        string: "foo",
+//                        array: [1, 2, 3],
+//                        function: { _ in 8 },
+//                        dictionary: [
+//                            "hello": "world",
+//                            "foo": "barz"
+//                        ]
+//                    )
+//                )
+//            )
+//        )
+//    )
+}
+
+enum Action {
+    
+    /*
+     Actions as Binding over Action.Enum
+     - button sets state of action, object responds
+     */
+    
+
+        case idle
+        case considering
+        case beginning
+        case ending
+        case error
+}
+
+//extension Async: Viewzable {
+//    func value(label: String?) -> some View {
+//        switch self.state {
+//        case .awaiting:
+//            AnyView(
+//                HStack {
+//                    if let value = value as? any Viewzable {
+//                        AnyView(value.value(label: label))
+//                        ProgressView().progressViewStyle(CircularProgressViewStyle())
+//                    } else {
+//                        Text("\(value)")
+//                    }
+//                }
+//            )
+//        case .idle:
+//            if let value = value as? any Viewzable {
+//                AnyView(value.value(label: label))
+//            } else {
+//                AnyView(Text("\(value)"))
+//            }
+//        }
+//    }
+//}
 
 struct ContentView: View {
     
@@ -33,9 +258,46 @@ struct ContentView: View {
         )
     )
     @State var button: Void = ()
+    @State var image: PhotosPickerItem?
+    @State var contact: CNContact?
+    @State var something: String = "Something"
 
-
+    @ObservedObject var objectz = Objectz()
+    
     var body: some View {
+        
+        Viewz { (objectz.baz, foo: $objectz.incrementBaz) }
+        
+//        Viewz {(
+//            numbers: [0,1,1,1,1],
+//            bars: [
+//                Bar(string: "bar 1", array: [0,1,2,3], function: { _ in 5 }, dictionary: ["foo": "bar"]),
+//                Bar(string: "bar 2", array: [0], function: { _ in 5 }, dictionary: ["foo": "bar"])
+//            ]
+//                .reduce(into: [String: Bar](), { sum, next in sum[next.string] = next })
+//        )}
+        
+//        Viewz {(
+//            (objectz.things.reduce(into: [String: Bar](), { sum, next in sum[next.string] = next })),
+//            numbers: [1,2,3,4,5,6,7],
+//            objectz,
+//            colors: (color: objectz.color, edit: $objectz.color, third: "thing"),
+//            [
+//                Bar(string: "hi", array: [0,1,2,3], function: { _ in 5 }, dictionary: ["foo": "bar"]),
+//                Bar(string: "hello", array: [0], function: { _ in 5 }, dictionary: ["foo": "bar"])
+//            ]
+//                .reduce(into: [String: Bar](), { sum, next in sum[next.string] = next })
+//        )}
+        
+//        Viewz {(
+//            (objectz.things.reduce(into: [String: Bar](), { sum, next in sum[next.string] = next })),
+//            numbers: [1,2,3,4,5,6,7],
+//            objectz,
+//            colors: (color: objectz.color, edit: $objectz.color, third: "thing")
+////            (number: objectz.baz, edit: $objectz.baz, foo: objectz.date),
+////            mutableColor: $objectz.color
+//        )}
+        
         //        ScrollView {
         //            Viewz {(
         //                foo: [5,1,1,1,1,1],
@@ -55,65 +317,70 @@ struct ContentView: View {
         //            Viewz { $foo.conditionally { $0.count <= 10 } }
         //            Viewz { (key: "yo", value: foo) }
         
-        Viewz {(
-            link: URL(string: "http://www.google.com"),
-            UIImage(systemName: "star.fill"),
-            color: $color,
-            toggle: $toggle,
-            date: $date,
-            map: $region,
-            button: $button,
-            foo: 3,
-            things: [1, 2, 3],
-            (age: age, editAge: $age.conditionally { $0 > 0 && $0 <= 5 }),
-            (edit: $foo.conditionally { $0.count <= 10 }, name: (key: "yo", value: foo)),
-            Just(
-                Foo(
-                    integer: 8,
-                    structs: [
-                        Bar(
-                            string: "foo",
-                            array: [1, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3],
-                            function: { _ in 8 },
-                            dictionary: [
-                                "hello": "world",
-                                "foo": nil
-                            ]
-                        ),
-                        Bar(
-                            string: "foo",
-                            array: [1, 2, 3],
-                            function: { _ in 8 },
-                            dictionary: [
-                                "hello": "world",
-                                "foo": "barz"
-                            ]
-                        ),
-                        Bar(
-                            string: "foo",
-                            array: [1, 2, 3],
-                            function: { _ in 8 },
-                            dictionary: [
-                                "hello": "world",
-                                "foo": "barz"
-                            ]
-                        )
-                    ],
-                    tuple: (9, 999),
-                    enum: .myCase(
-                        Bar(
-                            string: "foo",
-                            array: [1, 2, 3],
-                            function: { _ in 8 },
-                            dictionary: [
-                                "hello": "world",
-                                "foo": "barz"
-                            ]
-                        )
-                    )
-                )
-            )
-        )}
+//        Viewz {(
+//            video: AVPlayerItem(url: Bundle.main.url(forResource: "drift", withExtension: "mov")!),
+//            link: URL(string: "http://www.google.com"),
+//            singleImage: UIImage(systemName: "star.fill"),
+//            manyImage: Array(repeating: UIImage(systemName: "star.fill"), count: 100),
+//            pickableImage: $image,
+//            color: $color,
+//            toggle: $toggle,
+//            date: $date,
+//            contact: CNContact(),
+//            pickableContact: $contact,
+//            map: $region,
+//            button: $button,
+//            integer: 3,
+//            array: [1, 2, 3],
+//            age: (age, edit: $age.conditionally { $0 > 0 && $0 <= 5 }),
+//            (name: (keyProperty: "yo", valueProperty: foo), edit: $foo.conditionally { $0.count <= 10 }),
+//            Just(
+//                Foo(
+//                    integer: 8,
+//                    structs: [
+//                        Bar(
+//                            string: "foo",
+//                            array: [1, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3],
+//                            function: { _ in 8 },
+//                            dictionary: [
+//                                "hello": "world",
+//                                "foo": nil
+//                            ]
+//                        ),
+//                        Bar(
+//                            string: "foo",
+//                            array: [1, 2, 3],
+//                            function: { _ in 8 },
+//                            dictionary: [
+//                                "hello": "world",
+//                                "foo": "barz"
+//                            ]
+//                        ),
+//                        Bar(
+//                            string: "foo",
+//                            array: [1, 2, 3],
+//                            function: { _ in 8 },
+//                            dictionary: [
+//                                "hello": "world",
+//                                "foo": "barz"
+//                            ]
+//                        )
+//                    ],
+//                    tuple: (9, 999),
+//                    enum: .myCase(
+//                        Bar(
+//                            string: "foo",
+//                            array: [1, 2, 3],
+//                            function: { _ in 8 },
+//                            dictionary: [
+//                                "hello": "world",
+//                                "foo": "barz"
+//                            ]
+//                        )
+//                    )
+//                )
+//            )
+//        )}
     }
 }
 
@@ -145,92 +412,123 @@ struct Viewz: View {
     init(
         opacity: Double = 1.0,
         label: String? = nil,
+        isRoot: Bool = true,
         constructor: @escaping () -> Any
     ) {
         self.opacity = opacity
-        self.label = label
-        self.isRoot = true
-        self.constructor = constructor
-    }
-    
-    private init(
-        opacity: Double = 1.0,
-        label: String? = nil,
-        isRoot: Bool = false,
-        constructor: @escaping () -> Any
-    ) {
-        self.opacity = opacity
-        self.label = label
+        self.label = label?.hasPrefix(".") == true ? nil : label // "." for unlabled tuples
         self.isRoot = isRoot
         self.constructor = constructor
     }
     
     var body: some View {
-        let foo = HStack {
-            let parent = constructor()
-            if let label = label {
-                Text(label.capitalized).font(.headline)
-            }
-            VStack(alignment: .leading) {
-                if let parent = parent as? Binding<String> {
-                    TextField("", text: parent)
-                } else if let parent = parent as? Binding<Int> {
-                    Stepper("", value: parent)
-                } else if let parent = parent as? Binding<Date> {
-                    DatePicker("", selection: parent)
-                } else if let parent = parent as? Binding<Bool> {
-                    Toggle("", isOn: parent)
-                } else if let parent = parent as? Binding<Color> {
-                    ColorPicker("", selection: parent)
-                } else if let parent = parent as? Binding<Void> {
-                    Button("Button") {
-                        parent.wrappedValue = ()
-                    }
-                } else if let parent = parent as? Binding<MKCoordinateRegion> {
-                    Map(coordinateRegion: parent)
-                        .frame(width: 400, height: 300)
-                } else if let parent = parent as? UIImage {
-                    Image(uiImage: parent)
-                } else if let parent = parent as? URL {
-                    Link(destination: parent) {
-                        Text(parent.description)
-                    }
-                } else if Mirror(reflecting: parent).children.count > 0 {
-                    ForEach(Array(Mirror(reflecting: parent).children.enumerated()), id: \.offset) { _, x in
-                        if Mirror(reflecting: x.value).children.count > 2 {
-                            NavigationLink("\(x.label?.capitalized ?? "Some")") {
-                                ScrollView {
-                                    Viewz(opacity: opacity - 0.15, label: nil, isRoot: false) { x.value }
-                                        .navigationTitle("\(x.label?.capitalized ?? "Some")")
-                                }
+        let parent = constructor()
+        if let parent = parent as? any Viewzable {
+            AnyView(parent.value(label: label))
+        } else {
+            let foo = HStack {
+                VStack(alignment: .leading) {
+                    if let parent = parent as? [UIImage] {
+                        if let label = label {
+                            Text(label.capitalized).font(.headline)
+                        }
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))], spacing: 20) {
+                            ForEach(parent.enumerated().map { (element: $1, offset: $0) }, id: \.offset) {
+                                Image(uiImage: $0.element)
+                            }
+                        }
+                        .padding(8)
+                        .background(Color.purple.opacity(0.5))
+                        .cornerRadius(8)
+                        .frame(maxWidth: .infinity)
+
+                    } else if let parent = parent as? Dictionary<AnyHashable, Any> {
+                        if let label = label {
+                            Text(label.capitalized).font(.headline)
+                        }
+                        ForEach(parent.keys.map { $0 }, id: \.self) { x in
+                            Viewz(
+                                opacity: opacity - 0.15,
+                                label: "\(x)",
+                                isRoot: false,
+                                constructor: { parent[x] ?? "None" }
+                            )
+                        }
+                        .padding(8)
+                        .background(Color.purple.opacity(0.5))
+                        .cornerRadius(8)
+                        .frame(maxWidth: .infinity)
+                       
+                    } else if let functionType = getFunctionType(of: parent) {
+                        if let label = label {
+                            Text(label.capitalized).font(.headline)
+                        }
+                        Viewz(opacity: opacity - 0.15, isRoot: false) { functionType }
+
+                    } else if Mirror(reflecting: parent).children.count > 0 {
+                        if isRoot || label?.hasPrefix(".") == true || label?.isEmpty == true || label == nil {
+                            if let label = label {
+                                Text(label.capitalized).font(.headline)
+                            }
+                            ForEach(Array(Mirror(reflecting: parent).children.enumerated()), id: \.offset) { _, x in
+                                Viewz(
+                                    opacity: opacity - 0.15,
+                                    label: x.label,
+                                    isRoot: false,
+                                    constructor: { x.value }
+                                )
+                                .padding(8)
+                                .background(Color.purple.opacity(0.5))
+                                .cornerRadius(8)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         } else {
-                            Viewz(opacity: opacity - 0.15, label: x.label, isRoot: false) { x.value }
+                            NavigationLink(label?.capitalized ?? "Title Missing") {
+                                ScrollView {
+                                    ForEach(Array(Mirror(reflecting: parent).children.enumerated()), id: \.offset) { _, x in
+                                        Viewz(
+                                            opacity: opacity - 0.15,
+                                            label: x.label,
+                                            isRoot: false,
+                                            constructor: { x.value }
+                                        )
+                                        .padding(8)
+                                        .background(Color.purple.opacity(0.5))
+//                                        .cornerRadius(8)
+//                                        .frame(maxWidth: .infinity)
+                                    }
+                                    .padding(8)
+                                    .background(Color.yellow.opacity(opacity))
+                                    .cornerRadius(8)
+                                    .frame(maxWidth: .infinity)
+                                    .navigationTitle(label?.capitalized ?? "Title Missing")
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                    } else {
+                        if let label = label {
+                            Text(label.capitalized).font(.headline)
+                        }
+                        Text("\(parent)")
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                } else if let functionType = getFunctionType(of: parent) {
-                    Viewz(opacity: opacity - 0.15, isRoot: false) { functionType }
-                } else {
-                    Text("\(parent)")
                 }
             }
             .padding(8)
-            .background(Color.purple.opacity(0.5))
+            .background(Color.yellow.opacity(opacity))
             .cornerRadius(8)
             .frame(maxWidth: .infinity)
-        }
-        .padding(8)
-        .background(Color.yellow.opacity(opacity))
-        .cornerRadius(8)
-                
-        if isRoot {
-            NavigationView {
-                ScrollView {
-                    foo.navigationTitle("DataViewz")
+            
+            if isRoot {
+                NavigationView {
+                    ScrollView {
+                        foo.navigationTitle("DataViewz")
+                    }
                 }
+            } else {
+                foo
             }
-        } else {
-            foo
         }
     }
     
@@ -312,20 +610,64 @@ struct WebView: UIViewRepresentable {
 import SafariServices
 
 struct SafariView: UIViewControllerRepresentable {
-    
     let url: URL
-    
-    func makeUIViewController(context: UIViewControllerRepresentableContext<SafariView>) -> SFSafariViewController {
-        return SFSafariViewController(url: url)
+
+    func makeUIViewController(context: UIViewControllerRepresentableContext<SafariView>) -> UIViewController {
+        SFSafariViewController(url: url)
     }
-    
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariView>) {
-        
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: UIViewControllerRepresentableContext<SafariView>) {
+
     }
-    
 }
 
+struct ContactView: UIViewControllerRepresentable {
+    let contact: CNContact
+    
+    func makeUIViewController(context: UIViewControllerRepresentableContext<ContactView>) -> UIViewController {
+        CNContactViewController(for: contact)
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: UIViewControllerRepresentableContext<ContactView>) {
+
+    }
+}
+
+struct MutableContactView: UIViewControllerRepresentable {
+    @Binding var contact: CNContact?
+
+    class Coordinator: NSObject, CNContactViewControllerDelegate {
+        var parent: MutableContactView
+
+        init(_ parent: MutableContactView) {
+            self.parent = parent
+        }
+
+        func contactViewController(_ viewController: CNContactViewController, didCompleteWith contact: CNContact?) {
+            parent.contact = contact
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        let viewController: CNContactViewController
+        if let contact = contact {
+            viewController = CNContactViewController(for: contact)
+        } else {
+            viewController = CNContactViewController(forNewContact: nil)
+        }
+        viewController.delegate = context.coordinator
+        return UINavigationController(rootViewController: viewController)
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        // Update the view controller if needed
+    }
+}
 
 #Preview {
-    ContentView()
+    Viewz { 3 }
 }
